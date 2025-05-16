@@ -4,7 +4,10 @@ import buildinfo.RulesBuildInfo
 import scalafix.Versions
 import scalafix.interfaces.Scalafix
 import scalafix.interfaces.ScalafixArguments
+import scalafix.interfaces.imports._
 import scalafix.internal.v1.MainOps
+import scalafix.internal.rule.OrganizeImports
+import scalafix.internal.v1.Rules
 
 final class ScalafixImpl extends Scalafix {
 
@@ -16,6 +19,22 @@ final class ScalafixImpl extends Scalafix {
 
   override def mainHelp(screenWidth: Int): String = {
     MainOps.helpMessage(screenWidth)
+  }
+
+  override def loadOrganizeImports(): OrganizeImportsDirect = {
+    import scala.jdk.CollectionConverters._
+
+    val all = Rules.all().map(rule => ScalafixRuleImpl(rule))
+    val orgImports = all.collectFirst {
+      case r: OrganizeImports => r
+    }
+
+    new OrganizeImportsDirect {
+      def organize(in: java.util.List[Import]): java.util.List[Import] = {
+        println(s"HAHAHAHA: ${in.asScala}")
+        in
+      }
+    }
   }
 
   override def scalaVersion(): String =

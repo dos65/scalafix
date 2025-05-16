@@ -3,6 +3,7 @@ package scalafix.interfaces;
 import coursierapi.Repository;
 import scalafix.internal.interfaces.ScalafixCoursier;
 import scalafix.internal.interfaces.ScalafixInterfacesClassloader;
+import scalafix.interfaces.imports.OrganizeImportsDirect;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +37,8 @@ public interface Scalafix {
      * @return The help message as a string.
      */
     String mainHelp(int screenWidth);
+
+    OrganizeImportsDirect loadOrganizeImports();
 
     /**
      * The exact Scala versions used
@@ -213,4 +216,5 @@ public interface Scalafix {
                     "Failed to reflectively load Scalafix with classloader " + classLoader.toString(), ex);
         }
     }
+
 }
