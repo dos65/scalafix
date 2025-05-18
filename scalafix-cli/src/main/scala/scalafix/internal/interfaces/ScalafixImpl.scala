@@ -10,6 +10,8 @@ import scalafix.internal.rule.OrganizeImports
 import scalafix.internal.v1.Rules
 import scala.collection.mutable.ArrayBuffer
 import java.{util => ju}
+import java.nio.file.Path
+import scalafix.v1.Configuration
 
 final class ScalafixImpl extends Scalafix {
 
@@ -23,16 +25,11 @@ final class ScalafixImpl extends Scalafix {
     MainOps.helpMessage(screenWidth)
   }
 
-  override def loadOrganizeImports2(): OrganizeImportsDirect = {
+  override def loadOrganizeImports(config: ju.Optional[Path]): OrganizeImportsDirect = {
     import scala.jdk.CollectionConverters._
     import java.nio.file._
 
     val all = Rules.all(this.getClass.getClassLoader())
-    Files.write(
-      Paths.get("/home/v.chelyshov/debug-fix"),
-      s"ALL: ${all.map(v => v.getClass)}\n".getBytes,
-      StandardOpenOption.APPEND, StandardOpenOption.CREATE
-    )
     val orgImports = all.collectFirst {
       case r: OrganizeImports => r
     }
@@ -62,24 +59,16 @@ final class ScalafixImpl extends Scalafix {
       }
     
 
-    Files.write(
-      Paths.get("/home/v.chelyshov/debug-fix"),
-      s"AAAA2: ${orgImports}\n".getBytes,
-      StandardOpenOption.APPEND, StandardOpenOption.CREATE
-    )
     orgImports match {
       case None =>
         new OrganizeImportsDirect {
-          override def toString(): String = "Scalafix BAD INSTANCE"
-
-          def organize(in: java.util.List[Import]): java.util.List[Import] = {
-            in
+          def organize(in: java.util.List[Import]): java.util.List[java.util.List[Import]] = {
+            List(in).asJava
           }
         }
       case Some(rule) =>
         new OrganizeImportsDirect {
-          override def toString(): String = "Scalafix Org import"
-          def organize(in: java.util.List[Import]): java.util.List[Import] = {
+          def organize(in: java.util.List[Import]): java.util.List[java.util.List[Import]] = {
             val converted =
               in.asScala.flatMap { i =>
                 i.importers().asScala.map{ importer => 
@@ -98,7 +87,7 @@ final class ScalafixImpl extends Scalafix {
             )
 
             val out = rule.organizeGlobalImports2(converted.toList, ArrayBuffer.empty)
-            out.flatMap { groups =>
+            out.map { groups =>
                 groups.map{ imp => 
                   val i =
                     new scalafix.interfaces.imports.Importer {
@@ -115,7 +104,7 @@ final class ScalafixImpl extends Scalafix {
 
                     override def toString(): String = s"Scalafix $imp"
                   }  
-                }
+                }.asJava
               }
               .asJava  
           }
