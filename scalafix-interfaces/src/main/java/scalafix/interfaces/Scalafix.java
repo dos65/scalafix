@@ -13,6 +13,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Properties;
+import java.nio.file.*;
 
 /**
  * Public API for reflectively invoking Scalafix from a build tool or IDE integration.
@@ -38,7 +39,7 @@ public interface Scalafix {
      */
     String mainHelp(int screenWidth);
 
-    OrganizeImportsDirect loadOrganizeImports();
+    OrganizeImportsDirect loadOrganizeImports2();
 
     /**
      * The exact Scala versions used
@@ -139,6 +140,15 @@ public interface Scalafix {
      */
     static Scalafix fetchAndClassloadInstance(String requestedScalaVersion, List<Repository> repositories)
             throws ScalafixException {
+        try {
+            Files.write(
+                Paths.get("/home/v.chelyshov/debug-fix"),
+                "FETCH\n".getBytes(),
+                StandardOpenOption.APPEND, StandardOpenOption.CREATE
+            );
+        } catch(Throwable e) {
+
+        }
 
         String requestedScalaMajorMinorOrMajorVersion =
             requestedScalaVersion.replaceAll("^(\\d+\\.\\d+).*", "$1");
@@ -178,7 +188,25 @@ public interface Scalafix {
         if (scalafixVersion == null || scalaVersion == null)
             throw new ScalafixException("Failed to lookup versions from '" + propertiesPath + "'");
 
+        try {
+            Files.write(
+                Paths.get("/home/v.chelyshov/debug-fix"),
+                ("VERSION:" + scalafixVersion + "\n").getBytes(),
+                StandardOpenOption.APPEND, StandardOpenOption.CREATE
+            );
+        } catch(Throwable e) {
+
+        }
         List<URL> jars = ScalafixCoursier.scalafixCliJars(repositories, scalafixVersion, scalaVersion);
+        try {
+            Files.write(
+                Paths.get("/home/v.chelyshov/debug-fix"),
+                ("Jars:" + jars + "\n").getBytes(),
+                StandardOpenOption.APPEND, StandardOpenOption.CREATE
+            );
+        } catch(Throwable e) {
+
+        }
         ClassLoader parent = new ScalafixInterfacesClassloader(Scalafix.class.getClassLoader());
         return classloadInstance(new URLClassLoader(jars.stream().toArray(URL[]::new), parent));
     }

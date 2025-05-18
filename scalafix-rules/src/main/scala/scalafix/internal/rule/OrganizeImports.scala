@@ -110,6 +110,16 @@ class OrganizeImports(
     diagnostics.map(Patch.lint).asPatch + globalImportsPatch + localImportsPatch
   }
 
+  def organizeGlobalImports2(
+    imports: Seq[Importer],
+    diagnostics: ArrayBuffer[Diagnostic]
+  ): Seq[Seq[Importer]] = {
+    val fullyQualifiedGroups: Seq[ImportGroup] = {
+      groupImporters(diagnostics)(imports)
+    }
+    fullyQualifiedGroups.map(_.imports)
+  }
+
   private def organizeGlobalImports(
       unusedImporteePositions: UnusedImporteePositions,
       diagnostics: ArrayBuffer[Diagnostic]
@@ -126,6 +136,7 @@ class OrganizeImports(
 
     val (fullyQualifiedImporters, relativeImporters) =
       noImplicits partition isFullyQualified(diagnostics)
+
 
     // Organizes all the fully-qualified global importers.
     val fullyQualifiedGroups: Seq[ImportGroup] = {
